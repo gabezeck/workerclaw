@@ -95,8 +95,7 @@ jobs:
       - name: Install Playwright browsers
         run: |
           npm install -g playwright
-          PLAYWRIGHT_CLI=$(node -e "console.log(require.resolve('playwright/cli'))")
-          node "$PLAYWRIGHT_CLI" install --with-deps chromium
+          node "$(npm root -g)/playwright/cli.js" install --with-deps chromium
 
       - name: Run E2E tests (${{ matrix.config.name }})
         id: e2e
