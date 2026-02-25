@@ -163,6 +163,9 @@ config.gateway.port = 18789;
 config.gateway.mode = 'local';
 config.gateway.trustedProxies = ['10.1.0.0'];
 
+config.gateway.controlUi = config.gateway.controlUi || {};
+config.gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback = true;
+
 if (process.env.OPENCLAW_GATEWAY_TOKEN) {
     config.gateway.auth = config.gateway.auth || {};
     config.gateway.auth.token = process.env.OPENCLAW_GATEWAY_TOKEN;
@@ -252,18 +255,19 @@ if (process.env.TELEGRAM_BOT_TOKEN) {
 }
 
 // Discord configuration
-// Discord uses a nested dm object: dm.policy, dm.allowFrom (per DiscordDmConfig)
+// Discord uses dmPolicy and allowFrom at the top level (modern schema)
 if (process.env.DISCORD_BOT_TOKEN) {
     const dmPolicy = process.env.DISCORD_DM_POLICY || 'pairing';
-    const dm = { policy: dmPolicy };
-    if (dmPolicy === 'open') {
-        dm.allowFrom = ['*'];
-    }
     config.channels.discord = {
         token: process.env.DISCORD_BOT_TOKEN,
         enabled: true,
-        dm: dm,
+        dmPolicy: dmPolicy,
     };
+    if (process.env.DISCORD_DM_ALLOW_FROM) {
+        config.channels.discord.allowFrom = process.env.DISCORD_DM_ALLOW_FROM.split(',');
+    } else if (dmPolicy === 'open') {
+        config.channels.discord.allowFrom = ['*'];
+    }
 }
 
 // Slack configuration
