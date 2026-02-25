@@ -21,6 +21,25 @@ describe('buildEnvVars', () => {
     expect(result.OPENAI_API_KEY).toBe('sk-openai-key');
   });
 
+  it('includes ZAI_API_KEY and ZAI_BASE_URL when set directly', () => {
+    const env = createMockEnv({
+      ZAI_API_KEY: 'sk-zai-key',
+      ZAI_BASE_URL: 'https://api.zai.com/v1',
+    });
+    const result = buildEnvVars(env);
+    expect(result.ZAI_API_KEY).toBe('sk-zai-key');
+    expect(result.ZAI_BASE_URL).toBe('https://api.zai.com/v1');
+  });
+
+  it('strips trailing slashes from ZAI_BASE_URL', () => {
+    const env = createMockEnv({
+      ZAI_API_KEY: 'sk-zai-key',
+      ZAI_BASE_URL: 'https://api.zai.com/v1///',
+    });
+    const result = buildEnvVars(env);
+    expect(result.ZAI_BASE_URL).toBe('https://api.zai.com/v1');
+  });
+
   // Cloudflare AI Gateway (new native provider)
   it('passes Cloudflare AI Gateway env vars', () => {
     const env = createMockEnv({

@@ -105,6 +105,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
     echo "No existing config found, running openclaw onboard..."
 
     AUTH_ARGS=""
+    # NOTE: The first provider with a valid key in this chain will be used for initial setup.
+    # This creates an implicit precedence order (Cloudflare > Anthropic > OpenAI > ZAI).
     if [ -n "$CLOUDFLARE_AI_GATEWAY_API_KEY" ] && [ -n "$CF_AI_GATEWAY_ACCOUNT_ID" ] && [ -n "$CF_AI_GATEWAY_GATEWAY_ID" ]; then
         AUTH_ARGS="--auth-choice cloudflare-ai-gateway-api-key \
             --cloudflare-ai-gateway-account-id $CF_AI_GATEWAY_ACCOUNT_ID \
@@ -114,6 +116,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
         AUTH_ARGS="--auth-choice apiKey --anthropic-api-key $ANTHROPIC_API_KEY"
     elif [ -n "$OPENAI_API_KEY" ]; then
         AUTH_ARGS="--auth-choice openai-api-key --openai-api-key $OPENAI_API_KEY"
+    elif [ -n "$ZAI_API_KEY" ]; then
+        AUTH_ARGS="--auth-choice zai-api-key --zai-api-key $ZAI_API_KEY"
     fi
 
     openclaw onboard --non-interactive --accept-risk \
@@ -167,6 +171,17 @@ if (process.env.OPENCLAW_GATEWAY_TOKEN) {
 if (process.env.OPENCLAW_DEV_MODE === 'true') {
     config.gateway.controlUi = config.gateway.controlUi || {};
     config.gateway.controlUi.allowInsecureAuth = true;
+}
+
+// Z.ai Base URL override
+// HACK: Patched separately because `openclaw onboard` does not yet support a `--zai-base-url` flag.
+// This should be removed if/when the onboard command is updated.
+if (process.env.ZAI_BASE_URL) {
+    config.models = config.models || {};
+    config.models.providers = config.models.providers || {};
+    config.models.providers.zai = config.models.providers.zai || {};
+    config.models.providers.zai.baseUrl = process.env.ZAI_BASE_URL;
+    console.log('Z.ai Base URL override:', process.env.ZAI_BASE_URL);
 }
 
 // Legacy AI Gateway base URL override:
